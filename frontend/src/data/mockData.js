@@ -242,3 +242,47 @@ export const mockAdmin = {
   },
 }
 
+export const mockDonations = {
+  stats: [
+    { label: 'Total Collected', value: '$4,500', delta: '+18%', icon: 'dollar' },
+    { label: 'Monthly Recurring', value: '$2,750', delta: '+5', icon: 'trending' },
+    { label: 'Active Donors', value: '5', delta: '+12', icon: 'users' },
+  ],
+  history: [
+    {
+      id: 'd_1',
+      donor: 'Sarah Johnson',
+      ngo: 'Food Drive',
+      amount: 500,
+      status: 'completed',
+      type: 'one-time',
+      date: '4/28/2026',
+    },
+    {
+      id: 'd_2',
+      donor: 'Tech Corp Inc',
+      ngo: 'Education',
+      amount: 2000,
+      status: 'recurring',
+      type: 'monthly',
+      date: '4/27/2026',
+    },
+    {
+      id: 'd_3',
+      donor: 'Emily Davis',
+      ngo: 'Healthcare',
+      amount: 250,
+      status: 'completed',
+      type: 'one-time',
+      date: '4/26/2026',
+    },
+  ],
+}
+
+export const mockNgos = [
+  { id: 'ngo_1', name: 'Food Drive', category: 'Food Relief' },
+  { id: 'ngo_2', name: 'Education', category: 'Education' },
+  { id: 'ngo_3', name: 'Healthcare', category: 'Health' },
+]
+
+

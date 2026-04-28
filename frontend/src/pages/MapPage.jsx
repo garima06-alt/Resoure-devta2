@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import { LocateFixed, MapPinned } from 'lucide-react'
 import { useMemo } from 'react'
 import Button from '../components/ui/Button.jsx'
-import FakeMap from '../components/map/FakeMap.jsx'
+import IntelligenceMap from '../components/IntelligenceMap.jsx'
 import useGeolocation from '../hooks/useGeolocation.js'
 import { mockTasks } from '../data/mockData.js'
 
@@ -53,16 +53,14 @@ export default function MapPage() {
       <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card">
         <div className="absolute left-3 top-3 z-10 inline-flex items-center gap-2 rounded-2xl bg-white/90 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200 backdrop-blur">
           <MapPinned className="h-4 w-4 text-brand-800" />
-          Interactive map (mock) • Demo mode
+          Interactive map (Google Maps) • Real-time
         </div>
         <div className="p-3">
-          <FakeMap tasks={tasksWithGeo} user={coords} />
+          <IntelligenceMap />
         </div>
         <div className="border-t border-slate-200 bg-white px-4 py-3 text-xs text-slate-500">
-          Markers: <span className="font-semibold text-rose-600">red</span> urgent,
-          <span className="ml-1 font-semibold text-brand-800">teal</span> open,
-          <span className="ml-1 font-semibold text-emerald-700">green</span> completed,
-          <span className="ml-1 font-semibold text-sky-700">blue</span> you.
+          Markers: <span className="font-semibold text-rose-600">red</span> critical urgency,
+          <span className="ml-1 font-semibold text-teal-600">teal</span> moderate urgency.
         </div>
       </div>
     </motion.div>

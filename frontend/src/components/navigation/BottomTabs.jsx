@@ -12,23 +12,24 @@ const tabs = [
 
 export default function BottomTabs({ showAdmin }) {
   const items = showAdmin ? [...tabs, { to: '/app/admin', label: 'Admin', icon: Shield }] : tabs
+  const gridCols = items.length === 6 ? 'grid-cols-6' : 'grid-cols-5'
 
   return (
     <nav className="sticky bottom-0 z-40 border-t border-slate-200 bg-white/80 backdrop-blur">
-      <div className="mx-auto grid max-w-[430px] grid-cols-5 gap-1 px-2 py-2">
-        {items.slice(0, 5).map((t) => (
+      <div className={`mx-auto grid max-w-[430px] gap-1 px-2 py-2 ${gridCols}`}>
+        {items.map((t) => (
           <NavLink
             key={t.to}
             to={t.to}
             className={({ isActive }) =>
               cn(
-                'flex flex-col items-center justify-center rounded-2xl px-2 py-2 text-[11px] font-semibold transition',
+                'flex flex-col items-center justify-center rounded-2xl px-1 py-2 text-[10px] font-semibold transition',
                 isActive ? 'bg-brand-50 text-brand-800' : 'text-slate-500 hover:bg-slate-50',
               )
             }
           >
             <t.icon className="h-5 w-5" />
-            <div className="mt-1">{t.label}</div>
+            <div className="mt-1 truncate w-full text-center">{t.label}</div>
           </NavLink>
         ))}
       </div>
