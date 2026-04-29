@@ -5,6 +5,12 @@ import { Link, useNavigate } from 'react-router-dom'
 import ClusterCard from '../components/cards/ClusterCard.jsx'
 import KpiPillCard from '../components/cards/KpiPillCard.jsx'
 import { mockIntelligence, mockNgos, mockDonations } from '../data/mockData.js'
+import { formatINR } from '../utils/format.js'
+import SmartScanner from '../components/SmartScanner.jsx'
+import DeployModal from '../components/DeployModal.jsx'
+
+
+
 
 export default function HomePage() {
   const nav = useNavigate()
@@ -14,12 +20,50 @@ export default function HomePage() {
   const [amount, setAmount] = useState('')
   const [donationType, setDonationType] = useState('one-time')
   const [isSuccess, setIsSuccess] = useState(false)
+  const [kpis, setKpis] = useState(() => [...mockIntelligence.kpis])
+  
+  const [isDeployModalOpen, setIsDeployModalOpen] = useState(false)
+  const [selectedCrisis, setSelectedCrisis] = useState(null)
+  const [successToast, setSuccessToast] = useState(false)
+
 
   const clusters = useMemo(() => mockIntelligence.clusters, [])
 
   function deploy(id) {
-    setDeployed((prev) => new Set(prev).add(id))
+    const crisis = mockIntelligence.clusters.find(c => c.id === id)
+    setSelectedCrisis(crisis)
+    setIsDeployModalOpen(true)
   }
+
+  function handleConfirmDeployment(crisisId, volunteer) {
+    setDeployed((prev) => new Set(prev).add(crisisId))
+    setSuccessToast(true)
+    setTimeout(() => setSuccessToast(false), 4000)
+  }
+
+
+  const handleScannerSuccess = (data) => {
+    // 1. Update counter
+    const updated = kpis.map((k) => {
+      if (k.id === 'k_total') {
+        const currentVal = parseInt(k.value.replace(/,/g, ''), 10) || 0
+        return { ...k, value: (currentVal + 1).toLocaleString() }
+      }
+      return k
+    })
+    setKpis(updated)
+
+    // Update global mock value too so it persists across page views
+    const mockTotal = mockIntelligence.kpis.find(k => k.id === 'k_total')
+    if (mockTotal) {
+      const currentVal = parseInt(mockTotal.value.replace(/,/g, ''), 10) || 0
+      mockTotal.value = (currentVal + 1).toLocaleString()
+    }
+
+    // 2. Navigate to map page (coordinates are already stored in localStorage)
+    nav('/app/map')
+  }
+
 
   function handleDonate(e) {
     e.preventDefault()
@@ -41,8 +85,8 @@ export default function HomePage() {
     // Update stats
     const totalStat = mockDonations.stats.find(s => s.label === 'Total Collected')
     if (totalStat) {
-      const currentTotal = parseFloat(totalStat.value.replace('$', '').replace(',', ''))
-      totalStat.value = `$${(currentTotal + parseFloat(amount)).toLocaleString()}`
+      const currentTotal = parseFloat(totalStat.value.replace('$', '').replace('₹', '').replace(',', ''))
+      totalStat.value = formatINR(currentTotal + parseFloat(amount))
     }
 
     setIsSuccess(true)
@@ -88,7 +132,7 @@ export default function HomePage() {
         </div>
 
         <div className="mt-6 grid grid-cols-3 gap-3">
-          {mockIntelligence.kpis.map((k) => (
+          {kpis.map((k) => (
             <KpiPillCard
               key={k.id}
               icon={k.icon}
@@ -102,6 +146,8 @@ export default function HomePage() {
       </div>
 
       <div className="space-y-4 px-4 pb-6 pt-5">
+        <SmartScanner onSuccess={handleScannerSuccess} />
+
         <div className="flex items-center gap-3">
           <div className="grid h-10 w-10 place-items-center rounded-2xl bg-rose-500 text-white shadow-sm">
             <span className="text-lg">!</span>
@@ -222,7 +268,7 @@ export default function HomePage() {
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Amount ($)
+                      Amount (₹)
                     </label>
                     <input
                       type="number"
@@ -275,6 +321,27 @@ export default function HomePage() {
               )}
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      <DeployModal
+        isOpen={isDeployModalOpen}
+        onClose={() => setIsDeployModalOpen(false)}
+        crisis={selectedCrisis}
+        onConfirm={handleConfirmDeployment}
+      />
+
+      <AnimatePresence>
+        {successToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-50 rounded-2xl bg-emerald-600 text-white px-4 py-3 shadow-xl font-bold text-sm flex items-center gap-2 ring-2 ring-emerald-500 ring-offset-2"
+          >
+            <CheckCircle2 className="h-5 w-5 text-white" />
+            Response Team Deployed Successfully.
+          </motion.div>
         )}
       </AnimatePresence>
 

@@ -56,7 +56,7 @@ export default function MapPage() {
           Interactive map (Google Maps) • Real-time
         </div>
         <div className="p-3">
-          <IntelligenceMap />
+          <IntelligenceMap userCoords={coords} />
         </div>
         <div className="border-t border-slate-200 bg-white px-4 py-3 text-xs text-slate-500">
           Markers: <span className="font-semibold text-rose-600">red</span> critical urgency,

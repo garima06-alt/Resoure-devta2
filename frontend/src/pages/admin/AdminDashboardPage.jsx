@@ -4,7 +4,7 @@ import {
   Activity, 
   BarChart3, 
   Users, 
-  DollarSign, 
+  IndianRupee, 
   TrendingUp, 
   Search, 
   Filter, 
@@ -13,6 +13,8 @@ import {
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { mockAdmin, mockDonations } from '../../data/mockData.js'
+import { formatINR } from '../../utils/format.js'
+
 
 function MiniChart({ series }) {
   const max = Math.max(...series)
@@ -103,7 +105,7 @@ export default function AdminDashboardPage() {
                     idx === 0 ? 'bg-emerald-500' :
                     idx === 1 ? 'bg-blue-500' : 'bg-purple-500'
                   }`}>
-                    {idx === 0 && <DollarSign className="h-4 w-4" />}
+                    {idx === 0 && <IndianRupee className="h-4 w-4" />}
                     {idx === 1 && <TrendingUp className="h-4 w-4" />}
                     {idx === 2 && <Users className="h-4 w-4" />}
                   </div>
@@ -182,7 +184,7 @@ export default function AdminDashboardPage() {
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-extrabold text-emerald-600">
-                      ${donation.amount.toLocaleString()}
+                      {formatINR(donation.amount)}
                     </div>
                     <div className="text-[10px] text-slate-400 mt-1">
                       {donation.date}

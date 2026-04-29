@@ -244,8 +244,8 @@ export const mockAdmin = {
 
 export const mockDonations = {
   stats: [
-    { label: 'Total Collected', value: '$4,500', delta: '+18%', icon: 'dollar' },
-    { label: 'Monthly Recurring', value: '$2,750', delta: '+5', icon: 'trending' },
+    { label: 'Total Collected', value: '₹4,500', delta: '+18%', icon: 'dollar' },
+    { label: 'Monthly Recurring', value: '₹2,750', delta: '+5', icon: 'trending' },
     { label: 'Active Donors', value: '5', delta: '+12', icon: 'users' },
   ],
   history: [
