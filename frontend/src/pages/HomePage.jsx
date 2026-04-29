@@ -8,6 +8,9 @@ import { mockIntelligence, mockNgos, mockDonations } from '../data/mockData.js'
 import { formatINR } from '../utils/format.js'
 import SmartScanner from '../components/SmartScanner.jsx'
 import DeployModal from '../components/DeployModal.jsx'
+import { db } from '../firebase.js'
+import { collection, addDoc } from 'firebase/firestore'
+
 
 
 
@@ -26,8 +29,53 @@ export default function HomePage() {
   const [selectedCrisis, setSelectedCrisis] = useState(null)
   const [successToast, setSuccessToast] = useState(false)
 
+  const seedDatabase = async () => {
+    try {
+      const centers = [
+        { name: 'Dharavi, Mumbai', lat: 19.0402, lng: 72.8508 },
+        { name: 'Bandra, Mumbai', lat: 19.0596, lng: 72.8295 },
+        { name: 'Andheri, Mumbai', lat: 19.1136, lng: 72.8697 },
+        { name: 'Vashi, Navi Mumbai', lat: 19.0745, lng: 72.9978 },
+        { name: 'Belapur, Navi Mumbai', lat: 19.0199, lng: 73.0389 },
+        { name: 'Pune', lat: 18.5204, lng: 73.8567 },
+        { name: 'Nagpur', lat: 21.1458, lng: 79.0882 },
+        { name: 'Nashik', lat: 19.9975, lng: 73.7898 },
+        { name: 'Aurangabad', lat: 19.8762, lng: 75.3433 }
+      ]
+      const titles = ['Water Shortage', 'Medical Supply Gap', 'Food distribution needed', 'Sanitation assistance', 'Emergency shelter', 'Clothing distribution']
+      const needsArr = [['Water'], ['Medical'], ['Food'], ['Water', 'Food'], ['Medical', 'Water']]
+      const urgencies = ['critical', 'moderate']
+      const reportsRef = collection(db, 'reports')
+
+      for (let i = 0; i < 85; i++) {
+        const center = centers[Math.floor(Math.random() * centers.length)]
+        const lat = center.lat + (Math.random() - 0.5) * 0.12
+        const lng = center.lng + (Math.random() - 0.5) * 0.12
+        const title = titles[Math.floor(Math.random() * titles.length)] + ` (Ref #${1000 + i})`
+        const urgency = urgencies[Math.floor(Math.random() * urgencies.length)]
+        const needs = needsArr[Math.floor(Math.random() * needsArr.length)]
+        const households = Math.floor(Math.random() * 50) + 1
+
+        await addDoc(reportsRef, {
+          title,
+          urgency,
+          lat,
+          lng,
+          locationText: center.name,
+          needs,
+          households_affected: households,
+          createdAt: new Date().toISOString()
+        })
+      }
+      alert('85 production records mapped securely!')
+    } catch (err) {
+      console.error('Seeding failed:', err)
+      alert('Seeding failed. Check console.')
+    }
+  }
 
   const clusters = useMemo(() => mockIntelligence.clusters, [])
+
 
   function deploy(id) {
     const crisis = mockIntelligence.clusters.find(c => c.id === id)
@@ -155,6 +203,12 @@ export default function HomePage() {
           <div className="text-lg font-extrabold text-slate-900">
             Urgent Clusters <span className="text-rose-500">•</span>
           </div>
+          <button 
+            onClick={seedDatabase}
+            className="ml-auto text-[10px] font-extrabold tracking-widest text-slate-400 bg-slate-100 hover:bg-slate-200 ring-1 ring-slate-200 rounded-xl px-3 py-1.5 transition uppercase"
+          >
+            Deploy 85 Nodes
+          </button>
         </div>
 
         <div className="space-y-4">

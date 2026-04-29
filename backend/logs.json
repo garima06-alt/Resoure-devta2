@@ -1,0 +1,58 @@
+[
+  {
+    "id": "log_seed_1",
+    "timestamp": "2026-04-29T19:08:07.478Z",
+    "type": "timeout",
+    "userId": "vol_002",
+    "email": "volunteer2@artemyth.org",
+    "details": "Request timed out: GET /api/admin/map/pins took longer than 5000ms"
+  },
+  {
+    "id": "log_seed_2",
+    "timestamp": "2026-04-29T19:38:07.478Z",
+    "type": "unauthorized_access",
+    "userId": "user_099",
+    "email": "civilian@gmail.com",
+    "details": "Role volunteer tried to access admin endpoint /api/admin/diagnostics/logs"
+  },
+  {
+    "id": "log_seed_3",
+    "timestamp": "2026-04-29T19:58:07.478Z",
+    "type": "timeout",
+    "userId": "vol_005",
+    "email": "scout_neha@artemyth.org",
+    "details": "Request timed out: POST /api/admin/requests/req_44/status failed connection"
+  },
+  {
+    "id": "log_1777493287483_q81wwpbor",
+    "timestamp": "2026-04-29T20:08:07.483Z",
+    "type": "unauthorized_access",
+    "userId": "m4dQillPbEgXj26keqhw7jjG9Vx1",
+    "email": "volunteer_test@example.com",
+    "details": "Client-side: Common Folk accessed Admin UI element at /app/admin/map"
+  },
+  {
+    "id": "log_1777493287514_dcu9i8iyp",
+    "timestamp": "2026-04-29T20:08:07.514Z",
+    "type": "unauthorized_access",
+    "userId": "m4dQillPbEgXj26keqhw7jjG9Vx1",
+    "email": "volunteer_test@example.com",
+    "details": "Client-side: Common Folk accessed Admin UI element at /access-denied"
+  },
+  {
+    "id": "log_1777493288526_6gdr4r57d",
+    "timestamp": "2026-04-29T20:08:08.526Z",
+    "type": "unauthorized_access",
+    "userId": "m4dQillPbEgXj26keqhw7jjG9Vx1",
+    "email": "volunteer_test@example.com",
+    "details": "Auth verification error for endpoint /api/admin/map/pins: Failed to get document because the client is offline."
+  },
+  {
+    "id": "log_1777493288751_vopwctftu",
+    "timestamp": "2026-04-29T20:08:08.752Z",
+    "type": "unauthorized_access",
+    "userId": "m4dQillPbEgXj26keqhw7jjG9Vx1",
+    "email": "volunteer_test@example.com",
+    "details": "Auth verification error for endpoint /api/admin/map/pins: Failed to get document because the client is offline."
+  }
+]

@@ -5,17 +5,29 @@
 @layer base {
   :root {
     color-scheme: light;
+    --bg-app:      #f0f4f8;
+    --bg-card:     #ffffff;
+    --bg-section:  #f8fafc;
+    --accent-purple: #6c3fc5;
+    --accent-teal:   #0d9488;
+    --accent-coral:  #f43f5e;
+    --accent-amber:  #f59e0b;
+    --text-primary:  #1e293b;
+    --text-muted:    #64748b;
+    --border:        #e2e8f0;
   }
 
-  html,
-  body {
+  html, body {
     height: 100%;
   }
 
   body {
-    @apply bg-surface-2 text-slate-900 antialiased;
+    background-color: #f0f4f8;
+    color: #1e293b;
     font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
       Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   * {
@@ -25,13 +37,59 @@
 
 @layer components {
   .app-shell {
-    @apply mx-auto min-h-dvh w-full max-w-[430px] bg-surface shadow-soft;
+    @apply mx-auto min-h-dvh w-full max-w-[430px] relative;
+    background-color: #f0f4f8;
+    box-shadow: 0 0 60px rgba(0,0,0,0.06);
+  }
+
+  /* Light Glass Card */
+  .glass-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  /* Stat card on dark gradient header */
+  .stat-card-glass {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 14px;
+    backdrop-filter: blur(12px);
+  }
+
+  /* Page fade-in */
+  .page-enter {
+    animation: fadeSlideIn 0.25s ease-out forwards;
+  }
+
+  /* Pulsing red dot */
+  .pulse-dot {
+    animation: pulseDot 1.8s ease-in-out infinite;
   }
 }
 
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(1.4); }
+}
+
 @keyframes scannerAnimation {
-  0% { top: 10%; }
-  50% { top: 90%; }
+  0%   { top: 10%; }
+  50%  { top: 90%; }
   100% { top: 10%; }
 }
 
+@keyframes flicker {
+  0%   { transform: scale(1) rotate(-2deg); }
+  100% { transform: scale(1.1) rotate(2deg); }
+}
+
+.streak-flame {
+  animation: flicker 1.5s ease-in-out infinite alternate;
+}

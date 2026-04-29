@@ -1,39 +1,53 @@
-import { Bell, Brain, ChartNoAxesColumn, Map, Shield, User } from 'lucide-react'
+import { Bell, Brain, ChartNoAxesColumn, Map, Shield, User, Gift, ClipboardList, HelpCircle, Package, ServerCrash, Users } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { cn } from '../../utils/cn.js'
+import { useAuth } from '../../context/AuthContext'
 
-const tabs = [
-  { to: '/app', label: 'Intelligence', icon: Brain },
-  { to: '/app/analytics', label: 'Analytics', icon: ChartNoAxesColumn },
-  { to: '/app/map', label: 'Geo', icon: Map },
-  { to: '/app/notifications', label: 'Alerts', icon: Bell },
-  { to: '/app/profile', label: 'Profile', icon: User },
-]
+export default function BottomTabs() {
+  const { userRole } = useAuth()
 
-export default function BottomTabs({ showAdmin }) {
-  const items = showAdmin ? [...tabs, { to: '/app/admin', label: 'Admin', icon: Shield }] : tabs
-  const gridCols = items.length === 6 ? 'grid-cols-6' : 'grid-cols-5'
+  const adminTabs = [
+    { to: '/app/admin/map', label: 'Command Map', icon: Map },
+    { to: '/app/admin/donations', label: 'Ledger', icon: Gift },
+    { to: '/app/admin/inventory', label: 'Inventory', icon: Package },
+    { to: '/app/admin/users', label: 'Users', icon: Users },
+    { to: '/app/admin/diagnostics', label: 'Diagnostics', icon: ServerCrash },
+  ]
+
+  const commonTabs = [
+    { to: '/app/map', label: 'Geo Map', icon: Map },
+    { to: '/app/donations', label: 'Donations', icon: Gift },
+    { to: '/app/requests', label: 'Aid Tracker', icon: ClipboardList },
+    { to: '/app/support', label: 'Help', icon: HelpCircle },
+    { to: '/app/profile', label: 'Profile', icon: User },
+  ]
+
+  const items = userRole === 'admin' ? adminTabs : commonTabs
+  const gridCols = 'grid-cols-5'
 
   return (
-    <nav className="sticky bottom-0 z-40 border-t border-slate-200 bg-white/80 backdrop-blur">
-      <div className={`mx-auto grid max-w-[430px] gap-1 px-2 py-2 ${gridCols}`}>
+    <nav className="sticky bottom-0 z-40 border-t border-slate-800 bg-slate-950/80 backdrop-blur">
+      <div className={`mx-auto grid max-w-[480px] gap-1 px-2 py-2 ${gridCols}`}>
         {items.map((t) => (
           <NavLink
             key={t.to}
             to={t.to}
             className={({ isActive }) =>
               cn(
-                'flex flex-col items-center justify-center rounded-2xl px-1 py-2 text-[10px] font-semibold transition',
-                isActive ? 'bg-brand-50 text-brand-800' : 'text-slate-500 hover:bg-slate-50',
+                'flex flex-col items-center justify-center rounded-2xl px-1 py-2 text-[10px] font-bold tracking-tight transition',
+                isActive 
+                  ? (userRole === 'admin' ? 'bg-rose-500/10 text-rose-400' : 'bg-indigo-500/10 text-indigo-400') 
+                  : 'text-slate-500 hover:bg-slate-900',
               )
             }
           >
-            <t.icon className="h-5 w-5" />
-            <div className="mt-1 truncate w-full text-center">{t.label}</div>
+            <t.icon className="h-5 w-5 mb-0.5" />
+            <div className="truncate w-full text-center">{t.label}</div>
           </NavLink>
         ))}
       </div>
     </nav>
   )
 }
+
 

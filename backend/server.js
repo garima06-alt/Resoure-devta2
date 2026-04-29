@@ -4,9 +4,10 @@ import multer from 'multer'
 import axios from 'axios'
 import dotenv from 'dotenv'
 import { initializeApp } from 'firebase/app'
-import { getFirestore, collection, addDoc } from 'firebase/firestore'
+import { getFirestore, collection, addDoc, doc, getDoc, getDocs, updateDoc, deleteDoc, query, where } from 'firebase/firestore'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import fs from 'fs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // Load .env from frontend directory
@@ -32,6 +33,102 @@ const firebaseConfig = {
 // Initialize Firebase
 const firebaseApp = initializeApp(firebaseConfig)
 const db = getFirestore(firebaseApp)
+
+const logsFile = path.join(__dirname, 'logs.json')
+
+// Helper to log
+const logEvent = (type, details, userId = 'unknown', email = 'unknown') => {
+  let logs = []
+  try {
+    if (fs.existsSync(logsFile)) {
+      logs = JSON.parse(fs.readFileSync(logsFile, 'utf-8'))
+    } else {
+      // Seed initial logs for System Diagnostics
+      logs = [
+        {
+          id: 'log_seed_1',
+          timestamp: new Date(Date.now() - 3600000).toISOString(),
+          type: 'timeout',
+          userId: 'vol_002',
+          email: 'volunteer2@artemyth.org',
+          details: 'Request timed out: GET /api/admin/map/pins took longer than 5000ms'
+        },
+        {
+          id: 'log_seed_2',
+          timestamp: new Date(Date.now() - 1800000).toISOString(),
+          type: 'unauthorized_access',
+          userId: 'user_099',
+          email: 'civilian@gmail.com',
+          details: 'Role volunteer tried to access admin endpoint /api/admin/diagnostics/logs'
+        },
+        {
+          id: 'log_seed_3',
+          timestamp: new Date(Date.now() - 600000).toISOString(),
+          type: 'timeout',
+          userId: 'vol_005',
+          email: 'scout_neha@artemyth.org',
+          details: 'Request timed out: POST /api/admin/requests/req_44/status failed connection'
+        }
+      ]
+      fs.writeFileSync(logsFile, JSON.stringify(logs, null, 2))
+    }
+  } catch (e) {
+    console.error("Error reading logs file:", e)
+  }
+  const newLog = {
+    id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    timestamp: new Date().toISOString(),
+    type,
+    userId,
+    email,
+    details
+  }
+  logs.push(newLog)
+  try {
+    fs.writeFileSync(logsFile, JSON.stringify(logs, null, 2))
+  } catch (e) {
+    console.error("Error writing logs file:", e)
+  }
+  return newLog
+}
+
+
+const verifyAdmin = async (req, res, next) => {
+  const userId = req.headers['x-user-id']
+  const userEmail = req.headers['x-user-email'] || 'unknown'
+  
+  if (!userId) {
+    logEvent('unauthorized_access', `No User ID provided for endpoint ${req.originalUrl}`, userId, userEmail)
+    return res.status(403).json({ error: 'Access Denied' })
+  }
+
+  try {
+    const docRef = doc(db, 'users', userId)
+    const docSnap = await getDoc(docRef)
+    let role = 'volunteer'
+    if (docSnap.exists()) {
+      role = docSnap.data().role
+    } else {
+      // Fallback: If not in Firestore, check query param role (for testing/simulation)
+      const queryRole = req.headers['x-user-role']
+      if (queryRole === 'admin') {
+        role = 'admin'
+      }
+    }
+
+    if (role !== 'admin') {
+      logEvent('unauthorized_access', `Role ${role} tried to access admin endpoint ${req.originalUrl}`, userId, userEmail)
+      return res.status(403).json({ error: 'Access Denied' })
+    }
+    
+    next()
+  } catch (err) {
+    console.error('Auth error:', err)
+    logEvent('unauthorized_access', `Auth verification error for endpoint ${req.originalUrl}: ${err.message}`, userId, userEmail)
+    return res.status(403).json({ error: 'Access Denied' })
+  }
+}
+
 
 const GOOGLE_API_KEY = process.env.VITE_GOOGLE_MAPS_API_KEY
 
@@ -180,7 +277,199 @@ app.post('/api/scan-survey', upload.single('image'), async (req, res) => {
   }
 })
 
+// --- Logging Endpoints ---
+app.post('/api/logs/unauthorized', (req, res) => {
+  const { userId, email, details } = req.body
+  const log = logEvent('unauthorized_access', details || 'Unauthorized UI element viewed', userId, email)
+  res.status(201).json({ success: true, log })
+})
+
+app.post('/api/logs/timeout', (req, res) => {
+  const { userId, email, details } = req.body
+  const log = logEvent('timeout', details || 'Request timed out', userId, email)
+  res.status(201).json({ success: true, log })
+})
+
+// --- Admin Endpoints (Secured) ---
+app.get('/api/admin/diagnostics/logs', verifyAdmin, (req, res) => {
+  try {
+    let logs = []
+    if (fs.existsSync(logsFile)) {
+      logs = JSON.parse(fs.readFileSync(logsFile, 'utf-8'))
+    }
+    res.status(200).json(logs)
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch diagnostics logs' })
+  }
+})
+
+// Admin Map Management
+app.get('/api/admin/map/pins', verifyAdmin, async (req, res) => {
+  try {
+    const snap = await getDocs(collection(db, 'reports'))
+    const pins = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    res.status(200).json(pins)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.post('/api/admin/map/pins', verifyAdmin, async (req, res) => {
+  try {
+    const docRef = await addDoc(collection(db, 'reports'), req.body)
+    res.status(201).json({ id: docRef.id, ...req.body })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// Admin Donation Ledger
+app.get('/api/admin/donations', verifyAdmin, async (req, res) => {
+  try {
+    const snap = await getDocs(collection(db, 'donations'))
+    const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    res.status(200).json(data)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.post('/api/admin/donations/allocate', verifyAdmin, async (req, res) => {
+  try {
+    const { id, allocationDetails } = req.body
+    const docRef = doc(db, 'donations', id)
+    await updateDoc(docRef, { allocated: true, allocationDetails, updatedAt: new Date().toISOString() })
+    res.status(200).json({ success: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// Admin Inventory
+app.get('/api/admin/inventory', verifyAdmin, async (req, res) => {
+  try {
+    const snap = await getDocs(collection(db, 'inventory'))
+    const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    res.status(200).json(data)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.post('/api/admin/inventory', verifyAdmin, async (req, res) => {
+  try {
+    const docRef = await addDoc(collection(db, 'inventory'), { ...req.body, createdAt: new Date().toISOString() })
+    res.status(201).json({ id: docRef.id, ...req.body })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// Admin Request Control
+app.get('/api/admin/requests', verifyAdmin, async (req, res) => {
+  try {
+    const snap = await getDocs(collection(db, 'requests'))
+    const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    res.status(200).json(data)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.post('/api/admin/requests/:id/status', verifyAdmin, async (req, res) => {
+  try {
+    const { status } = req.body
+    const docRef = doc(db, 'requests', req.params.id)
+    await updateDoc(docRef, { status, updatedAt: new Date().toISOString() })
+    res.status(200).json({ success: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// Admin User Directory
+app.get('/api/admin/users', verifyAdmin, async (req, res) => {
+  try {
+    const snap = await getDocs(collection(db, 'users'))
+    const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    res.status(200).json(data)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.put('/api/admin/users/:id', verifyAdmin, async (req, res) => {
+  try {
+    const docRef = doc(db, 'users', req.params.id)
+    await updateDoc(docRef, { ...req.body, updatedAt: new Date().toISOString() })
+    res.status(200).json({ success: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.delete('/api/admin/users/:id', verifyAdmin, async (req, res) => {
+  try {
+    const docRef = doc(db, 'users', req.params.id)
+    await deleteDoc(docRef)
+    res.status(200).json({ success: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// --- Common Folk Endpoints ---
+app.post('/api/donations', async (req, res) => {
+  try {
+    const docRef = await addDoc(collection(db, 'donations'), { ...req.body, allocated: false, createdAt: new Date().toISOString() })
+    res.status(201).json({ id: docRef.id, ...req.body })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.get('/api/donations/user/:userId', async (req, res) => {
+  try {
+    const q = query(collection(db, 'donations'), where('userId', '==', req.params.userId))
+    const snap = await getDocs(q)
+    const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    res.status(200).json(data)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.post('/api/requests', async (req, res) => {
+  try {
+    const docRef = await addDoc(collection(db, 'requests'), { ...req.body, status: 'pending', createdAt: new Date().toISOString() })
+    res.status(201).json({ id: docRef.id, ...req.body })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.get('/api/requests/user/:userId', async (req, res) => {
+  try {
+    const q = query(collection(db, 'requests'), where('userId', '==', req.params.userId))
+    const snap = await getDocs(q)
+    const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    res.status(200).json(data)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.post('/api/support', async (req, res) => {
+  try {
+    const docRef = await addDoc(collection(db, 'support'), { ...req.body, status: 'open', createdAt: new Date().toISOString() })
+    res.status(201).json({ id: docRef.id, ...req.body })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 const PORT = 5000
+
 app.listen(PORT, () => {
   console.log(`Backend server listening on port ${PORT}`)
 })

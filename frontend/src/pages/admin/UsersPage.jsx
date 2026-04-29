@@ -1,193 +1,114 @@
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Mail, MapPin, Phone, Shield, Star, User } from 'lucide-react'
-import { Link } from 'react-router-dom'
-
-const mockUsers = [
-  {
-    id: 'u_001',
-    name: 'Sarah Johnson',
-    email: 'sarah.j@email.com',
-    phone: '+91 98765 43210',
-    role: 'volunteer',
-    status: 'online',
-    location: 'Mumbai Central',
-    skills: ['First Aid', 'Teaching', 'Communication'],
-    tasksCompleted: 24,
-    rating: 4.9,
-    joinedDate: 'Jan 2026',
-  },
-  {
-    id: 'u_002',
-    name: 'Raj Patel',
-    email: 'raj.patel@email.com',
-    phone: '+91 98765 43211',
-    role: 'volunteer',
-    status: 'online',
-    location: 'Andheri West',
-    skills: ['Logistics', 'Driving', 'Organization'],
-    tasksCompleted: 18,
-    rating: 4.7,
-    joinedDate: 'Feb 2026',
-  },
-  {
-    id: 'u_003',
-    name: 'Priya Sharma',
-    email: 'priya.s@email.com',
-    phone: '+91 98765 43212',
-    role: 'admin',
-    status: 'online',
-    location: 'Bandra',
-    skills: ['Management', 'Planning', 'Coordination'],
-    tasksCompleted: 45,
-    rating: 5.0,
-    joinedDate: 'Dec 2025',
-  },
-  {
-    id: 'u_004',
-    name: 'Amit Kumar',
-    email: 'amit.k@email.com',
-    phone: '+91 98765 43213',
-    role: 'volunteer',
-    status: 'offline',
-    location: 'Dharavi',
-    skills: ['Medical', 'First Aid', 'Healthcare'],
-    tasksCompleted: 32,
-    rating: 4.8,
-    joinedDate: 'Jan 2026',
-  },
-  {
-    id: 'u_005',
-    name: 'Neha Desai',
-    email: 'neha.d@email.com',
-    phone: '+91 98765 43214',
-    role: 'volunteer',
-    status: 'online',
-    location: 'Powai',
-    skills: ['Teaching', 'Child Care', 'Education'],
-    tasksCompleted: 21,
-    rating: 4.9,
-    joinedDate: 'Mar 2026',
-  },
-]
+import { Mail, Shield, User } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
+import AdminElement from '../../components/AdminElement'
 
 export default function UsersPage() {
+  const { currentUser, userRole } = useAuth()
+  const [users, setUsers] = useState([])
+  const [loading, setLoading] = useState(false)
+
+  const fetchUsers = async () => {
+    if (!currentUser) return
+    setLoading(true)
+    try {
+      const res = await fetch('http://localhost:5000/api/admin/users', {
+        headers: {
+          'x-user-id': currentUser.uid,
+          'x-user-email': currentUser.email,
+          'x-user-role': userRole
+        }
+      })
+      if (res.status === 403) {
+        window.location.href = '/access-denied'
+        return
+      }
+      const data = await res.json()
+      if (Array.isArray(data)) {
+        setUsers(data)
+      }
+    } catch (err) {
+      console.error('Failed to fetch users', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchUsers()
+  }, [currentUser])
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.22, ease: 'easeOut' }}
-      className="space-y-4"
-    >
-      <div className="flex items-center gap-3">
-        <Link
-          to="/app/admin"
-          className="grid h-9 w-9 place-items-center rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4 text-slate-700" />
-        </Link>
-        <div>
-          <div className="text-xs font-semibold text-slate-500">Admin / Users</div>
-          <div className="text-xl font-extrabold tracking-tight text-slate-900">
-            All Users
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-4 gap-3">
-        <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-card">
-          <div className="text-[11px] font-semibold text-slate-500">Total Users</div>
-          <div className="mt-1 text-lg font-extrabold">{mockUsers.length}</div>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-card">
-          <div className="text-[11px] font-semibold text-slate-500">Online Now</div>
-          <div className="mt-1 text-lg font-extrabold">
-            {mockUsers.filter((u) => u.status === 'online').length}
-          </div>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-card">
-          <div className="text-[11px] font-semibold text-slate-500">Volunteers</div>
-          <div className="mt-1 text-lg font-extrabold">
-            {mockUsers.filter((u) => u.role === 'volunteer').length}
-          </div>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-card">
-          <div className="text-[11px] font-semibold text-slate-500">Admins</div>
-          <div className="mt-1 text-lg font-extrabold">
-            {mockUsers.filter((u) => u.role === 'admin').length}
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        {mockUsers.map((user) => (
-          <div
-            key={user.id}
-            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-card hover:shadow-lg transition-shadow"
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex items-start gap-3">
-                <div className="grid h-12 w-12 place-items-center rounded-full bg-brand-100 ring-2 ring-brand-200">
-                  <User className="h-6 w-6 text-brand-800" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <div className="text-sm font-bold text-slate-900">{user.name}</div>
-                    {user.role === 'admin' && (
-                      <div className="flex items-center gap-1 rounded-full bg-purple-100 px-2 py-0.5">
-                        <Shield className="h-3 w-3 text-purple-700" />
-                        <span className="text-[10px] font-semibold text-purple-700">
-                          Admin
-                        </span>
-                      </div>
-                    )}
-                    <div
-                      className={`h-2 w-2 rounded-full ${
-                        user.status === 'online' ? 'bg-emerald-500' : 'bg-slate-300'
-                      }`}
-                    />
-                  </div>
-                  <div className="mt-1 flex items-center gap-3 text-xs text-slate-600">
-                    <div className="flex items-center gap-1">
-                      <Mail className="h-3 w-3" />
-                      {user.email}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Phone className="h-3 w-3" />
-                      {user.phone}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      {user.location}
-                    </div>
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {user.skills.map((skill) => (
-                      <span
-                        key={skill}
-                        className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-700"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="flex items-center gap-1 text-sm font-bold text-slate-900">
-                  <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                  {user.rating}
-                </div>
-                <div className="mt-1 text-xs text-slate-600">
-                  {user.tasksCompleted} tasks
-                </div>
-                <div className="mt-1 text-[10px] text-slate-500">
-                  Joined {user.joinedDate}
-                </div>
-              </div>
+    <AdminElement>
+      <motion.div 
+        initial={{ opacity: 0 }} 
+        animate={{ opacity: 1 }} 
+        className="space-y-6 max-w-4xl mx-auto p-4 font-sans text-slate-100"
+      >
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950/20 to-slate-900 border border-slate-800 p-6 shadow-xl">
+          <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-indigo-500/10 blur-3xl rounded-full" />
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 border border-indigo-500/30">
+              <User className="h-6 w-6" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight">User Directory</h1>
+              <p className="text-xs text-indigo-400 font-bold uppercase tracking-widest mt-0.5">Deployment Operations</p>
             </div>
           </div>
-        ))}
-      </div>
-    </motion.div>
+        </div>
+
+        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 backdrop-blur-xl">
+          {loading ? (
+            <div className="flex justify-center items-center h-48 text-xs text-slate-500 font-bold uppercase tracking-wider animate-pulse">
+              Syncing Directory...
+            </div>
+          ) : users.length === 0 ? (
+            <div className="flex flex-col justify-center items-center h-48 border border-dashed border-slate-800 rounded-xl text-slate-600 p-4">
+              <User className="h-8 w-8 mb-2 stroke-1" />
+              <div className="text-xs font-semibold">No nodes registered.</div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {users.map((user) => (
+                <div 
+                  key={user.id} 
+                  className="p-4 rounded-xl border border-slate-800 bg-slate-950/40 flex justify-between items-center hover:border-indigo-500/30 transition"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400 border border-slate-700">
+                      <User className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-slate-100">{user.email}</span>
+                        {user.role === 'admin' && (
+                          <span className="flex items-center gap-1 rounded bg-rose-500/10 border border-rose-500/30 px-1.5 py-0.5 text-[9px] font-extrabold text-rose-400 uppercase">
+                            <Shield className="h-2.5 w-2.5" />
+                            Admin
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs font-mono text-slate-500 mt-0.5 flex items-center gap-1">
+                        <Mail className="h-3.5 w-3.5" />
+                        ID: {user.id}
+                      </div>
+                    </div>
+                  </div>
+
+                  <span className={`text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full border ${
+                    user.role === 'admin' ? 'bg-rose-500/10 text-rose-400 border-rose-500/30' : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30'
+                  }`}>
+                    {user.role === 'admin' ? 'NGO Coordinator' : 'Volunteer'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </AdminElement>
   )
 }
+

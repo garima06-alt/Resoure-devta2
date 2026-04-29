@@ -6,7 +6,7 @@ export default function AppLayout() {
   const location = useLocation()
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex min-h-dvh flex-col bg-slate-950">
       <motion.main
         key={location.pathname}
         initial={{ opacity: 0, y: 10 }}
@@ -17,8 +17,9 @@ export default function AppLayout() {
       >
         <Outlet />
       </motion.main>
-      <BottomTabs showAdmin={true} />
+      <BottomTabs />
     </div>
   )
 }
+
 

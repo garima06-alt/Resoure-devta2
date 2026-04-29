@@ -1,23 +1,9 @@
 import { useEffect, useState, useRef } from 'react'
 import { APIProvider, Map, AdvancedMarker, InfoWindow, useMap } from '@vis.gl/react-google-maps'
 import { MarkerClusterer } from '@googlemaps/markerclusterer'
-import { initializeApp } from 'firebase/app'
-import { getFirestore, collection, onSnapshot, addDoc } from 'firebase/firestore'
+import { collection, onSnapshot, addDoc } from 'firebase/firestore'
+import { db } from '../firebase'
 
-// Firebase config retrieved from Firebase Console
-const firebaseConfig = {
-  apiKey: "AIzaSyAJmcq5scMZPlbCuNPKfYiOyhAwjMKxQ-k",
-  authDomain: "artemyth-gsc2026.firebaseapp.com",
-  projectId: "artemyth-gsc2026",
-  storageBucket: "artemyth-gsc2026.firebasestorage.app",
-  messagingSenderId: "999367351843",
-  appId: "1:999367351843:web:b3d14bf5e43b920225db96",
-  measurementId: "G-106YSFVQDS"
-}
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig)
-const db = getFirestore(app)
 
 const defaultCenter = { lat: 19.0760, lng: 72.8777 } // Mumbai
 
