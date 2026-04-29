@@ -10,6 +10,7 @@ const firebaseConfig = {
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
+console.log("ENV CHECK:", import.meta.env);
 console.log("API KEY:", import.meta.env.VITE_FIREBASE_API_KEY);
 console.log("Firebase initialized with API Key:", firebaseConfig.apiKey);
 const app = initializeApp(firebaseConfig)
